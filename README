@@ -1,0 +1,46 @@
+ == Sender ==
+
+ Se construieste un pachet de tip S pe care il trimit catre receiver.
+ Se asteapta un ACK. In caz ca nu respecta conditia de time, se 
+ reincearca transmiterea acestuia de inca doua ori. In caz ca nici 
+ acestea nu sunt confirmate, se incheie programul.
+ In cazul in care se primeste ACK pentru pachetul S, se verifica
+ type-ul si in cazul in care avem ACK se extrage SEQ sin acesta si
+ determinam noul SEQ. In cazul in care se primeste NACK, se recalculeaza
+ numarul de secventa si crc-ul. Acest pas se efectueaza pana se primeste
+ un ACK. Odata primit, se dimensiunea maxima a detelor primite si timpul
+ pana la timeout.
+ Iteram pentru fiecare fisier primit. Se incepe cu transmiterea pachetului F
+ care contine in data numele fisierului pentru care se asteapta un ACK (CheckACK).
+ Daca am primit ACK, continuam. Altfel, retrimitem. Dupa aceasta etapa,
+ deschidem fisierul pentru a citi din el. Se contruieste un mesaj si se
+ asteapta ACK. Cand nu mai citim din fisier, se transmite pachetul Z si se 
+ asteapta ACK.
+ La finalul transmiterii tuturor fisierelor, se trimite un pachet de tip B.
+ Se asteapta ACK, iar odata cu primirea acestuia, transmisia se incheie.
+
+  == Receiver ==
+
+ Se asteapta sosirea unui pachet S de maxim 3 ori. Daca acesta nu ajunge,
+ se incheie programul. In cazul ca acesta este primit, se calculeaza numarul
+ de secventa pentru mesajul ce urmeaza trimis si crc-ul mesajul receptionat.
+ Se extrage crc-ul mesajului receptionat.
+ Daca cele doua valori difera, atunci se trimite un NACK si se asteapta 
+ primirea mesajul corect.
+ Dupa fiecare mesaj primit, actualizez numarul de secventa si recalculez crc-ul.
+ Daca cele doua valori sunt egale, se trimite ACK in care avem in campul data
+ maxl si timpul de asteptat pana la timeout.
+ Dupa aceasta etapa, se asteapta venirea unui nou mesaj. Dupa ce am primit
+ un mesaj, se verifica corectitudinea si se face update la numarul de secventa.
+ In cazul in care se primeste un NACK, recalculam numarul de secventa si
+ se asteapta sosirea unui nou mesaj. Verificam corectitudinea acestuia prin
+ compararea crc-ului calculat cu cel extras din pachetul primit.
+ Dupa primirea unui pachet corect, se verifica tipul acestuia. In cazul in care
+ este de type-ul F se extrage numele fisierului si se creeaza fisierul de recv.
+ In cazul in care pacheul este de tip D, se extrag datele si se copiaza intr-un
+ buffer pentru a le scrie in fisierul respectiv.
+ Daca este un pachet Z, se inchide fisierul, iar daca este B, se inchide
+ conexiunea.
+ Pentru fiecare se trimite un ACK cu SEQ extras din pachetul primit corect.
+ De asemenea, se verifica SEQ primit cu SEQ anterior pentru a asigura
+ respingerea duplicatelor.
